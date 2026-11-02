@@ -1,0 +1,14 @@
+:root { font-family: system-ui, sans-serif; color: #e8edf4; background: #121820; }
+body { width: 300px; margin: 0; }
+main { padding: 18px; }
+h1 { font-size: 17px; margin: 0 0 10px; }
+h2 { font-size: 14px; margin: 18px 0 8px; }
+p { font-size: 12px; line-height: 1.5; color: #b8c5d4; }
+label { display: block; margin: 14px 0 6px; font-size: 12px; font-weight: 700; }
+.picker-hint { margin: 6px 0 0; }
+#picker-toggle[aria-pressed="true"] { background: #364557; }
+#picker-toggle:disabled { cursor: default; opacity: 0.6; }
+#token { box-sizing: border-box; width: 100%; padding: 9px; border-radius: 7px; border: 1px solid #718096; color: #fff; background: #202b39; }
+input:focus-visible, button:focus-visible { outline: 2px solid #79b8ff; outline-offset: 2px; }
+button { margin-top: 10px; width: 100%; padding: 9px; border: 0; border-radius: 7px; color: #fff; background: #2168c4; cursor: pointer; font-weight: 700; }
+#status { min-height: 18px; margin-bottom: 0; }

@@ -1,5 +1,5 @@
 #define AppName "Video Channel Downloader"
-#define AppVersion "1.4"
+#define AppVersion "1.5"
 
 [Setup]
 AppId={{5C257202-E5E6-4DA5-A953-1357E6411B93}
@@ -22,6 +22,7 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 
 [Files]
 Source: "dist\VideoChannelDownloader.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "chrome_extension\*"; DestDir: "{app}\chrome_extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\VideoChannelDownloader.exe"

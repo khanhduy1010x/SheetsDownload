@@ -65,7 +65,7 @@ if defined ISCC_EXE (
 ) else (
   echo Khong tim thay Inno Setup 6. EXE van dung doc lap duoc.
 )
-echo Chi giao file EXE hoac Setup.exe trong thu muc dist cho khach; khong giao file .py.
+echo Setup.exe da kem extension Chrome. Neu giao EXE rieng, giao them thu muc chrome_extension.
 pause
 exit /b 0
 

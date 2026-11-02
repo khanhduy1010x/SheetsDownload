@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="popup.css">
+  <title>Chọn video YouTube</title>
+</head>
+<body>
+  <main>
+    <h1>Chọn video YouTube</h1>
+    <button id="picker-toggle" type="button" aria-pressed="false" disabled>Bật tiện ích trên YouTube</button>
+    <p class="picker-hint">Tắt tiện ích để ẩn nút chọn video trên trang YouTube.</p>
+    <h2>Kết nối SheetsDownload</h2>
+    <p>Mở ứng dụng, vào tab <strong>Video chọn trên Chrome</strong> và bấm <strong>Sao chép mã kết nối</strong>.</p>
+    <label for="token">Mã kết nối</label>
+    <input id="token" type="password" autocomplete="off" spellcheck="false">
+    <button id="connect" type="button">Lưu và kiểm tra</button>
+    <p id="status" role="status" aria-live="polite"></p>
+    <p>Sau khi bật công cụ, mở YouTube và bấm <strong>Bật chế độ chọn</strong> ở thanh bên trái.</p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

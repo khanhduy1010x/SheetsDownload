@@ -251,6 +251,11 @@ class DownloadHistory:
             video_ids = {row[0] for row in db.execute("SELECT video_id FROM videos UNION SELECT video_id FROM watched_videos")}
         return names, video_ids
 
+    def downloaded_ids(self) -> set[str]:
+        """Return completed IDs without applying the channel-only watch filter."""
+        with self.connection() as db:
+            return {row[0] for row in db.execute("SELECT video_id FROM videos")}
+
 
 def sheet_csv_url(sheet_url: str) -> str:
     parsed = urlparse(sheet_url.strip())

@@ -1,0 +1,28 @@
+#sd-video-picker { position: fixed; left: 8px; bottom: 12px; width: min(224px, calc(100vw - 16px)); z-index: 2147483646; font: 13px/1.45 system-ui, sans-serif; color: #eef3f8; }
+#sd-video-picker[hidden] { display: none; }
+#sd-video-picker * { box-sizing: border-box; }
+#sd-video-picker button { font: inherit; cursor: pointer; }
+#sd-video-picker button:focus-visible, #sd-video-picker a:focus-visible { outline: 2px solid #8bc1ff; outline-offset: 2px; }
+#sd-video-picker .sd-toggle { display: block; width: 100%; padding: 11px 16px; border: 0; border-radius: 10px; color: white; background: #1c67c2; box-shadow: 0 6px 20px #0007; font-weight: 700; }
+#sd-video-picker .sd-toggle[aria-pressed="true"] { background: #17559e; }
+#sd-video-picker .sd-panel { width: 100%; max-height: min(64vh, 560px); display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding: 12px; border-radius: 12px; background: #17212d; box-shadow: 0 12px 36px #0009; }
+#sd-video-picker .sd-panel[hidden], #sd-video-picker .sd-marquee[hidden] { display: none; }
+#sd-video-picker .sd-heading { display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+#sd-video-picker .sd-heading strong { font-weight: 750; }
+#sd-video-picker .sd-count { color: #a5cdfa; }
+#sd-video-picker .sd-close { border: 0; padding: 0 4px; background: none; color: #cbd5df; font-size: 22px; }
+#sd-video-picker .sd-guide, #sd-video-picker .sd-empty, #sd-video-picker .sd-status { margin: 0; color: #c6d2de; font-size: 12px; }
+#sd-video-picker .sd-list { min-height: 40px; max-height: 260px; overflow: auto; }
+#sd-video-picker .sd-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #334354; }
+#sd-video-picker .sd-item a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #eef3f8; text-decoration: none; }
+#sd-video-picker .sd-item a:hover { text-decoration: underline; }
+#sd-video-picker .sd-item button { flex: none; border: 0; padding: 4px 7px; border-radius: 5px; color: #d9e3ee; background: #314155; }
+#sd-video-picker .sd-actions { display: grid; gap: 7px; }
+#sd-video-picker .sd-actions button { width: 100%; border: 0; border-radius: 7px; padding: 8px 10px; color: white; background: #2469be; font-weight: 650; }
+#sd-video-picker .sd-actions .sd-clear { color: #dae5ee; background: #364557; }
+#sd-video-picker .sd-actions button:disabled { cursor: default; opacity: 0.5; }
+#sd-video-picker .sd-marquee { position: fixed; z-index: -1; pointer-events: none; border: 2px solid #58a9ff; background: #58a9ff38; }
+.sd-selecting-mode :is(ytd-rich-grid-media, ytd-grid-video-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer, ytd-rich-grid-slim-media, ytm-shorts-lockup-view-model-v2).sd-picked { outline: 3px solid #58a9ff !important; outline-offset: 2px; }
+.sd-selecting-mode :is(ytd-rich-grid-media, ytd-grid-video-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer, ytd-rich-grid-slim-media, ytm-shorts-lockup-view-model-v2).sd-preview { outline: 3px dashed #a1d3ff !important; outline-offset: 2px; }
+@media (max-width: 600px) { #sd-video-picker .sd-panel { max-height: 55vh; } }
+@media (prefers-reduced-motion: reduce) { #sd-video-picker * { scroll-behavior: auto !important; } }

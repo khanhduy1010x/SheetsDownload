@@ -7,6 +7,8 @@ build/
 dist/
 *.spec
 *.exe
+*.crx
+*.pem
 *.dll
 *.log
 *.sqlite*
