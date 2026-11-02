@@ -28,15 +28,20 @@ python -m venv .venv
 
 Trên Windows có thể chạy `start_windows.bat`. Dán link Sheet, chọn thư mục video, định dạng, số luồng và bộ lọc rồi bấm **Bắt đầu tải**.
 
-## Chọn nhiều video trực tiếp trên YouTube bằng Chrome
+## Hai cách tải trong cùng ứng dụng
 
-1. Mở SheetsDownload. Chọn thư mục lưu video trong tab **Video chọn trên Chrome**. Ứng dụng cần đang chạy khi gửi video từ Chrome.
-2. Vào `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén** và trỏ đến thư mục `chrome_extension`. Nếu dùng bộ cài Windows, thư mục này nằm cạnh `VideoChannelDownloader.exe` trong thư mục cài đặt.
-3. Trong ứng dụng, bấm **Sao chép mã kết nối**. Bấm biểu tượng extension trên Chrome, dán mã và chọn **Lưu và kiểm tra**. Mã nằm trên máy và không được đưa vào trang YouTube.
-4. Trong popup extension, bấm **Bật tiện ích trên YouTube**. Mở YouTube rồi bấm **Bật chế độ chọn** ở thanh bên trái. Kéo một vùng qua các ô video hoặc bấm từng ô. Bấm **Tắt chế độ chọn** khi chọn xong. Khi không cần dùng, bấm **Tắt tiện ích trên YouTube** trong popup để ẩn nút nổi.
-5. Chọn **Thêm vào danh sách** để giữ video trong hàng chờ của ứng dụng; sau đó chọn video trong tab Chrome của ứng dụng và bấm **Tải video đã chọn** hoặc **Tải cả danh sách**. Chọn **Tải ngay** để đưa các video được chọn vào hàng chờ tải tự động. Nếu ứng dụng đang tải từ Google Sheet, hàng chờ Chrome sẽ bắt đầu khi lượt đó kết thúc.
+- **Tải theo Sheet / Kênh:** cách tải ban đầu, nhập link Google Sheet rồi chọn bộ lọc và bấm **Bắt đầu tải**.
+- **Tải video đã chọn:** nhận video được chọn trực tiếp trên YouTube bằng extension Chrome. Chọn thư mục lưu một lần trong tab này.
 
-Hàng chờ được lưu trong `%APPDATA%\YouTubeChannelTool\selected_videos.sqlite3` trên Windows. Video đã tải được kiểm tra theo lịch sử hiện có để tránh tải trùng; việc chọn thủ công không áp dụng bộ lọc lượt xem/thời lượng của chế độ Google Sheet. Extension chỉ hoạt động trên `www.youtube.com` và kết nối tới ứng dụng qua `127.0.0.1` bằng mã riêng của máy.
+## Cài ứng dụng và extension Chrome
+
+1. Cài `VideoChannelDownloader-Setup.exe` và mở ứng dụng.
+2. Cài extension trong thư mục `chrome_extension` đi kèm ứng dụng. Với bản chưa phát hành trên Chrome Web Store, mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén** và trỏ đến thư mục đó.
+3. Bấm biểu tượng extension để bật công cụ trên YouTube. Khi cần chọn video, bấm **Bật chế độ chọn** ở thanh bên trái, kéo qua các ô hoặc bấm từng video. Sau đó chọn **Thêm vào danh sách** hoặc **Tải ngay**.
+
+Ứng dụng và extension tự kết nối qua `127.0.0.1` khi ứng dụng đang mở; không cần sao chép hay nhập mã. **Thêm vào danh sách** giữ video trong tab **Tải video đã chọn** để tải sau. **Tải ngay** đưa video vào hàng chờ tải tự động; nếu ứng dụng đang tải từ Google Sheet thì hàng chờ này bắt đầu khi lượt Sheet kết thúc. Bấm **Tắt tiện ích trên YouTube** trong popup khi muốn ẩn nút nổi.
+
+Hàng chờ được lưu trong `%APPDATA%\YouTubeChannelTool\selected_videos.sqlite3` trên Windows. Video đã tải được kiểm tra theo lịch sử hiện có để tránh tải trùng; việc chọn thủ công không áp dụng bộ lọc lượt xem/thời lượng của chế độ Google Sheet. Cầu nối chỉ lắng nghe trên `127.0.0.1`; extension gửi video trực tiếp khi ứng dụng đang mở.
 
 Nút dừng sẽ chờ các lượt đang tải kết thúc. Đóng cửa sổ cũng chờ các luồng giải phóng tài nguyên trước khi thoát.
 
@@ -62,4 +67,4 @@ Các kiểm thử media chạy bằng FFmpeg thật nếu tìm được `ffmpeg`
 
 Chạy `build_windows.bat` trên máy đã cài Python, FFmpeg/FFprobe và Node.js. Script cài thư viện build vào môi trường riêng và tạo `dist/VideoChannelDownloader.exe`, kèm các runtime cần thiết. Nếu có Inno Setup 6, script tạo thêm bộ cài từ `windows_installer.iss`.
 
-Repository chỉ chứa mã nguồn, extension Chrome, icon, tài liệu và kiểm thử. Không chứa file EXE, cookie, mã kết nối, thiết lập cá nhân, lịch sử tải hay dữ liệu Google Sheets.
+Repository chỉ chứa mã nguồn, extension Chrome, icon, tài liệu và kiểm thử. Không chứa file EXE, cookie, mã kết nối, khóa riêng của extension, thiết lập cá nhân, lịch sử tải hay dữ liệu Google Sheets.

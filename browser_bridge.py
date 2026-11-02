@@ -1,39 +1,20 @@
-"""Authenticated loopback endpoint for the Chrome video picker."""
+"""Loopback endpoint for the Chrome video picker."""
 from __future__ import annotations
 
-import hmac
 import json
-import os
-import secrets
 import sqlite3
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
 from typing import Callable
 
 from video_queue import SelectedVideoQueue
 
 BRIDGE_PORT = 39173
 MAX_BODY_BYTES = 64 * 1024
+CLIENT_HEADER = "X-SheetsDownload-Client"
 
 
-def load_bridge_token(state_dir: Path) -> str:
-    state_dir.mkdir(parents=True, exist_ok=True)
-    token_path = state_dir / "browser_bridge_token"
-    try:
-        return token_path.read_text(encoding="ascii").strip()
-    except FileNotFoundError:
-        token = secrets.token_urlsafe(32)
-        try:
-            descriptor = os.open(token_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        except FileExistsError:
-            return token_path.read_text(encoding="ascii").strip()
-        with os.fdopen(descriptor, "w", encoding="ascii") as file:
-            file.write(token)
-        return token
-
-
-def make_handler(video_queue: SelectedVideoQueue, token: str, on_download_requested: Callable[[], None] | None = None):
+def make_handler(video_queue: SelectedVideoQueue, on_download_requested: Callable[[], None] | None = None):
     class BridgeHandler(BaseHTTPRequestHandler):
         def log_message(self, format_string, *args):
             return
@@ -47,26 +28,26 @@ def make_handler(video_queue: SelectedVideoQueue, token: str, on_download_reques
             self.end_headers()
             self.wfile.write(data)
 
-        def authorized(self) -> bool:
-            host = self.headers.get("Host", "")
-            supplied = self.headers.get("Authorization", "")
-            expected = "Bearer " + token
-            if host != f"127.0.0.1:{BRIDGE_PORT}" or not hmac.compare_digest(supplied, expected):
-                self.respond(403, {"error": "Không được phép kết nối."})
+        def local_request(self, *, send_videos: bool = False) -> bool:
+            if self.headers.get("Host") != f"127.0.0.1:{BRIDGE_PORT}":
+                self.respond(403, {"error": "Chỉ nhận kết nối trên máy này."})
+                return False
+            if send_videos and self.headers.get(CLIENT_HEADER) != "extension":
+                self.respond(403, {"error": "Yêu cầu gửi video không hợp lệ."})
                 return False
             return True
 
         def do_GET(self):
             if self.path != "/v1/health":
                 self.respond(404, {"error": "Không tìm thấy."})
-            elif self.authorized():
+            elif self.local_request():
                 self.respond(200, {"ok": True})
 
         def do_POST(self):
             if self.path != "/v1/videos":
                 self.respond(404, {"error": "Không tìm thấy."})
                 return
-            if not self.authorized():
+            if not self.local_request(send_videos=True):
                 return
             if self.headers.get("Content-Type", "").split(";")[0].strip().lower() != "application/json":
                 self.respond(415, {"error": "Yêu cầu phải là JSON."})
@@ -97,8 +78,8 @@ def make_handler(video_queue: SelectedVideoQueue, token: str, on_download_reques
 
 
 class BrowserBridge:
-    def __init__(self, video_queue: SelectedVideoQueue, token: str, on_download_requested: Callable[[], None] | None = None):
-        self.server = ThreadingHTTPServer(("127.0.0.1", BRIDGE_PORT), make_handler(video_queue, token, on_download_requested))
+    def __init__(self, video_queue: SelectedVideoQueue, on_download_requested: Callable[[], None] | None = None):
+        self.server = ThreadingHTTPServer(("127.0.0.1", BRIDGE_PORT), make_handler(video_queue, on_download_requested))
         self.server.daemon_threads = True
         self.thread = threading.Thread(target=self.server.serve_forever, name="browser-bridge", daemon=True)
 

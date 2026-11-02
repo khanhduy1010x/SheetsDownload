@@ -1,5 +1,12 @@
 const BRIDGE_URL = "http://127.0.0.1:39173";
 
+async function bridgeAvailable() {
+  const response = await fetch(`${BRIDGE_URL}/v1/health`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Không kết nối được SheetsDownload. Hãy mở ứng dụng trên máy.");
+  const result = await response.json();
+  if (result?.ok !== true) throw new Error("Cổng kết nối đang được ứng dụng khác sử dụng.");
+}
+
 chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" });
 
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -26,6 +33,14 @@ function youtubeId(rawUrl) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
+  if (message?.type === "getConnectionStatus") {
+    bridgeAvailable().then(() => respond({ ok: true })).catch((error) => {
+      respond({ ok: false, error: error instanceof TypeError
+        ? "Mở ứng dụng SheetsDownload để nhận video."
+        : error.message });
+    });
+    return true;
+  }
   if (message?.type === "getPickerEnabled") {
     chrome.storage.local.get({ pickerEnabled: false }).then(({ pickerEnabled }) => {
       respond({ enabled: pickerEnabled === true });
@@ -56,17 +71,16 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       videos.push({ url: `https://www.youtube.com/watch?v=${id}`, title: item.title.slice(0, 500) });
     }
   }
-  chrome.storage.local.get("bridgeToken").then(async ({ bridgeToken }) => {
-    if (!bridgeToken) throw new Error("Mở biểu tượng extension và nhập mã kết nối từ SheetsDownload.");
+  (async () => {
     const response = await fetch(`${BRIDGE_URL}/v1/videos`, {
       method: "POST",
-      headers: { "Authorization": `Bearer ${bridgeToken}`, "Content-Type": "application/json" },
+      headers: { "X-SheetsDownload-Client": "extension", "Content-Type": "application/json" },
       body: JSON.stringify({ action: message.action, videos }),
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "SheetsDownload từ chối danh sách video.");
     respond(result);
-  }).catch((error) => {
+  })().catch((error) => {
     const detail = error instanceof TypeError
       ? "Không kết nối được SheetsDownload. Hãy mở ứng dụng trên máy."
       : error.message;

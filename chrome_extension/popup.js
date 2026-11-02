@@ -1,6 +1,5 @@
-const tokenInput = document.querySelector("#token");
 const status = document.querySelector("#status");
-const button = document.querySelector("#connect");
+const connectionStatus = document.querySelector("#connection-status");
 const pickerToggle = document.querySelector("#picker-toggle");
 
 function showPickerState(enabled) {
@@ -8,10 +7,15 @@ function showPickerState(enabled) {
   pickerToggle.textContent = enabled ? "Tắt tiện ích trên YouTube" : "Bật tiện ích trên YouTube";
 }
 
-chrome.storage.local.get({ bridgeToken: "", pickerEnabled: false }).then(({ bridgeToken, pickerEnabled: enabled }) => {
-  if (bridgeToken) tokenInput.value = bridgeToken;
+chrome.storage.local.get({ pickerEnabled: false }).then(({ pickerEnabled: enabled }) => {
   showPickerState(enabled === true);
   pickerToggle.disabled = false;
+});
+
+chrome.runtime.sendMessage({ type: "getConnectionStatus" }, (response) => {
+  connectionStatus.textContent = chrome.runtime.lastError
+    ? "Không kiểm tra được kết nối. Hãy mở lại extension."
+    : response?.ok ? "Đã kết nối với SheetsDownload." : response?.error || "Mở ứng dụng SheetsDownload để nhận video.";
 });
 
 pickerToggle.addEventListener("click", async () => {
@@ -25,29 +29,5 @@ pickerToggle.addEventListener("click", async () => {
     status.textContent = "Không đổi được trạng thái. Hãy thử lại.";
   } finally {
     pickerToggle.disabled = false;
-  }
-});
-
-button.addEventListener("click", async () => {
-  const token = tokenInput.value.trim();
-  if (!token) {
-    status.textContent = "Hãy nhập mã kết nối.";
-    return;
-  }
-  button.disabled = true;
-  status.textContent = "Đang kiểm tra...";
-  try {
-    const response = await fetch("http://127.0.0.1:39173/v1/health", {
-      headers: { "Authorization": `Bearer ${token}` },
-    });
-    if (!response.ok) throw new Error("Mã kết nối không đúng.");
-    await chrome.storage.local.set({ bridgeToken: token });
-    status.textContent = "Đã kết nối. Anh có thể chọn video trên YouTube.";
-  } catch (error) {
-    status.textContent = error instanceof TypeError
-      ? "Không thấy ứng dụng SheetsDownload đang chạy."
-      : error.message;
-  } finally {
-    button.disabled = false;
   }
 });

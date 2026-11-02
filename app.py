@@ -15,7 +15,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from browser_bridge import BrowserBridge, load_bridge_token
+from browser_bridge import BrowserBridge
 from downloader import DownloadHistory, get_state_dir, run
 from selected_download import run_selected_queue
 from video_queue import SelectedVideoQueue
@@ -67,7 +67,6 @@ class DownloaderApp(tk.Tk):
         self.browser_paused = False
         self.browser_resume_requested = threading.Event()
         self.selected_queue = SelectedVideoQueue(get_state_dir())
-        self.bridge_token = load_bridge_token(get_state_dir())
         self.browser_bridge: BrowserBridge | None = None
         self.protocol("WM_DELETE_WINDOW", self.request_close)
         settings = self.read_settings()
@@ -94,7 +93,7 @@ class DownloaderApp(tk.Tk):
         self.progress = tk.StringVar(value="")
         self.build_ui()
         try:
-            self.browser_bridge = BrowserBridge(self.selected_queue, self.bridge_token, self.browser_resume_requested.set)
+            self.browser_bridge = BrowserBridge(self.selected_queue, self.browser_resume_requested.set)
             self.browser_bridge.start()
         except OSError as error:
             logging.getLogger(__name__).error("Không mở được cầu nối Chrome: %s", error)
@@ -151,8 +150,8 @@ class DownloaderApp(tk.Tk):
         notebook.pack(fill="both", expand=True)
         sheet_tab = ttk.Frame(notebook)
         browser_tab = ttk.Frame(notebook)
-        notebook.add(sheet_tab, text="Tải từ Google Sheet")
-        notebook.add(browser_tab, text="Video chọn trên Chrome")
+        notebook.add(sheet_tab, text="Tải theo Sheet / Kênh")
+        notebook.add(browser_tab, text="Tải video đã chọn")
         container = ttk.Frame(sheet_tab, padding=18)
         container.pack(fill="both", expand=True)
         container.columnconfigure(1, weight=1)
@@ -217,18 +216,13 @@ class DownloaderApp(tk.Tk):
         container = ttk.Frame(parent, padding=18)
         container.pack(fill="both", expand=True)
         container.columnconfigure(1, weight=1)
-        container.rowconfigure(3, weight=1)
+        container.rowconfigure(2, weight=1)
         ttk.Label(container, text="Thư mục video").grid(row=0, column=0, sticky="w", pady=7)
         ttk.Entry(container, textvariable=self.folder).grid(row=0, column=1, sticky="ew", padx=(12, 8), pady=7)
         ttk.Button(container, text="Chọn thư mục", command=self.choose_folder).grid(row=0, column=2, sticky="e")
 
-        connection = ttk.Frame(container)
-        connection.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(5, 12))
-        ttk.Label(connection, text="Mở extension Chrome, nhập mã kết nối của tool:").pack(side="left")
-        ttk.Button(connection, text="Sao chép mã kết nối", command=self.copy_bridge_token).pack(side="left", padx=10)
-
         controls = ttk.Frame(container)
-        controls.grid(row=2, column=0, columnspan=3, sticky="ew", pady=(0, 8))
+        controls.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(12, 8))
         ttk.Button(controls, text="Tải video đã chọn", command=self.prepare_selected_videos).pack(side="left")
         ttk.Button(controls, text="Tải cả danh sách", command=self.prepare_all_videos).pack(side="left", padx=8)
         ttk.Button(controls, text="Xóa khỏi danh sách", command=self.remove_selected_videos).pack(side="left")
@@ -242,17 +236,12 @@ class DownloaderApp(tk.Tk):
         ]:
             self.browser_table.heading(column, text=label)
             self.browser_table.column(column, width=width, minwidth=80, stretch=column != "status")
-        self.browser_table.grid(row=3, column=0, columnspan=3, sticky="nsew")
+        self.browser_table.grid(row=2, column=0, columnspan=3, sticky="nsew")
         scrollbar = ttk.Scrollbar(container, orient="vertical", command=self.browser_table.yview)
-        scrollbar.grid(row=3, column=3, sticky="ns")
+        scrollbar.grid(row=2, column=3, sticky="ns")
         self.browser_table.configure(yscrollcommand=scrollbar.set)
         self.browser_status = tk.StringVar(value="Sẵn sàng nhận video từ Chrome")
-        ttk.Label(container, textvariable=self.browser_status).grid(row=4, column=0, columnspan=3, sticky="w", pady=(10, 0))
-
-    def copy_bridge_token(self) -> None:
-        self.clipboard_clear()
-        self.clipboard_append(self.bridge_token)
-        self.browser_status.set("Đã sao chép mã kết nối. Dán vào cửa sổ extension Chrome.")
+        ttk.Label(container, textvariable=self.browser_status).grid(row=3, column=0, columnspan=3, sticky="w", pady=(10, 0))
 
     def prepare_selected_videos(self) -> None:
         count = self.selected_queue.prepare(list(self.browser_table.selection()))

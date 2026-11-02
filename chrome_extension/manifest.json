@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SheetsDownload - chọn video YouTube",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Chọn nhiều video trên YouTube rồi gửi vào SheetsDownload để lưu hoặc tải.",
   "permissions": ["storage"],
   "host_permissions": [

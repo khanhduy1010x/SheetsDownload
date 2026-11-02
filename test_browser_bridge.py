@@ -7,7 +7,7 @@ import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
-from browser_bridge import BRIDGE_PORT, load_bridge_token, make_handler
+from browser_bridge import BRIDGE_PORT, CLIENT_HEADER, make_handler
 from video_queue import SelectedVideoQueue
 
 
@@ -46,25 +46,28 @@ class QueueTests(unittest.TestCase):
 
 
 class BridgeTests(unittest.TestCase):
-    def test_token_is_persistent(self):
-        with tempfile.TemporaryDirectory() as folder:
-            first = load_bridge_token(Path(folder))
-            self.assertGreater(len(first), 30)
-            self.assertEqual(first, load_bridge_token(Path(folder)))
-
-    def test_bridge_requires_token_and_accepts_batch(self):
+    def test_bridge_connects_without_pairing_and_accepts_batch(self):
         with tempfile.TemporaryDirectory() as folder:
             queue = SelectedVideoQueue(Path(folder))
             resumed = threading.Event()
-            server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(queue, "secret", resumed.set))
+            server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(queue, resumed.set))
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
             try:
-                for token, expected in (("wrong", 403), ("secret", 200)):
-                    with self.subTest(token=token):
+                client = http.client.HTTPConnection("127.0.0.1", server.server_port)
+                client.request("GET", "/v1/health", headers={"Host": f"127.0.0.1:{BRIDGE_PORT}"})
+                response = client.getresponse()
+                self.assertEqual(response.status, 200)
+                response.read()
+                client.close()
+                for client_header, expected in ((None, 403), ("extension", 200)):
+                    with self.subTest(client_header=client_header):
+                        headers = {"Host": f"127.0.0.1:{BRIDGE_PORT}", "Content-Type": "application/json"}
+                        if client_header:
+                            headers[CLIENT_HEADER] = client_header
                         client = http.client.HTTPConnection("127.0.0.1", server.server_port)
                         client.request("POST", "/v1/videos", json.dumps({"action": "list", "videos": [VIDEO]}),
-                                       {"Host": f"127.0.0.1:{BRIDGE_PORT}", "Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                                       headers)
                         response = client.getresponse()
                         self.assertEqual(response.status, expected)
                         response.read()
@@ -72,13 +75,40 @@ class BridgeTests(unittest.TestCase):
                 self.assertEqual(queue.list()[0]["status"], "saved")
                 client = http.client.HTTPConnection("127.0.0.1", server.server_port)
                 client.request("POST", "/v1/videos", json.dumps({"action": "download", "videos": [VIDEO]}),
-                               {"Host": f"127.0.0.1:{BRIDGE_PORT}", "Authorization": "Bearer secret", "Content-Type": "application/json"})
+                               {"Host": f"127.0.0.1:{BRIDGE_PORT}", CLIENT_HEADER: "extension", "Content-Type": "application/json"})
                 response = client.getresponse()
                 self.assertEqual(response.status, 200)
                 response.read()
                 client.close()
                 self.assertTrue(resumed.is_set())
                 self.assertEqual(queue.ready_count(), 1)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=2)
+
+    def test_bridge_rejects_wrong_host_and_browser_preflight(self):
+        with tempfile.TemporaryDirectory() as folder:
+            queue = SelectedVideoQueue(Path(folder))
+            server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(queue))
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                client = http.client.HTTPConnection("127.0.0.1", server.server_port)
+                client.request("GET", "/v1/health", headers={"Host": "example.com"})
+                response = client.getresponse()
+                self.assertEqual(response.status, 403)
+                response.read()
+                client.close()
+                client = http.client.HTTPConnection("127.0.0.1", server.server_port)
+                client.request("OPTIONS", "/v1/videos", headers={
+                    "Host": f"127.0.0.1:{BRIDGE_PORT}", "Origin": "https://example.com",
+                    "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": CLIENT_HEADER.lower(),
+                })
+                response = client.getresponse()
+                self.assertNotEqual(response.status, 200)
+                response.read()
+                client.close()
             finally:
                 server.shutdown()
                 server.server_close()

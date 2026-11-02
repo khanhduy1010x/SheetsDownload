@@ -1,5 +1,5 @@
 #define AppName "Video Channel Downloader"
-#define AppVersion "1.5"
+#define AppVersion "1.6"
 
 [Setup]
 AppId={{5C257202-E5E6-4DA5-A953-1357E6411B93}
